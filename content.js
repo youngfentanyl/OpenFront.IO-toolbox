@@ -297,3 +297,79 @@
         init();
     }
 })();
+(function autoStartGameWhenFull() {
+    const CHECK_INTERVAL_MS = 1000;
+
+    function countPlayers() {
+        const playerLists = document.querySelectorAll('.players-list');
+        if (!playerLists.length) return 0;
+
+        const playerTags = playerLists[0].querySelectorAll('span.player-tag');
+        return playerTags.length;
+    }
+
+    function injectUI(lobbyBox) {
+        if (document.querySelector('.auto-start-container')) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'auto-start-container';
+        wrapper.style.display = 'flex';
+        wrapper.style.alignItems = 'center';
+        wrapper.style.marginTop = '10px';
+        wrapper.style.gap = '8px';
+
+        const label = document.createElement('label');
+        label.textContent = 'Required Players To Auto-Start :';
+        label.style.fontSize = '14px';
+
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.min = '1';
+        input.max = '999';
+        input.value = '999';
+        input.className = 'player-threshold-input';
+        input.style.width = '60px';
+        input.style.padding = '4px 6px';
+        input.style.border = '1px solid #ccc';
+        input.style.borderRadius = '6px';
+
+        wrapper.appendChild(label);
+        wrapper.appendChild(input);
+
+        lobbyBox.appendChild(wrapper);
+    }
+
+    function waitForLobbyBoxAndInject() {
+        const lobbyBox = document.querySelector('.lobby-id-box');
+        if (!lobbyBox) return;
+
+        injectUI(lobbyBox);
+
+        const interval = setInterval(() => {
+            const input = document.querySelector('.player-threshold-input');
+            if (!input) return;
+
+            const expected = parseInt(input.value, 10);
+            const current = countPlayers();
+
+            console.log(`[AutoStart] ${current} joueur(s) détecté(s) / ${expected}`);
+
+            if (current >= expected) {
+                const startBtn = document.querySelector('.start-game-button');
+                if (startBtn) {
+                    console.log('[AutoStart] Lancement de la partie !');
+                    startBtn.click();
+                    clearInterval(interval);
+                }
+            }
+        }, CHECK_INTERVAL_MS);
+    }
+
+    const tryInterval = setInterval(() => {
+        const lobbyBox = document.querySelector('.lobby-id-box');
+        if (lobbyBox) {
+            clearInterval(tryInterval);
+            waitForLobbyBoxAndInject();
+        }
+    }, 500);
+})();
