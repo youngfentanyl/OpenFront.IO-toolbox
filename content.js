@@ -278,6 +278,8 @@
 })();
 (function () {
     const statsKey = 'openfrontStats';
+    const playedURLsKey = 'openfrontPlayedURLs';
+
     const getLang = () => {
         const langText = document.getElementById('lang-name')?.textContent?.toLowerCase();
         return langText?.includes('fr') ? 'fr' : 'en';
@@ -309,6 +311,9 @@
     };
 
     const saveStats = (stats) => localStorage.setItem(statsKey, JSON.stringify(stats));
+
+    const loadPlayedURLs = () => JSON.parse(localStorage.getItem(playedURLsKey)) || [];
+    const savePlayedURLs = (urls) => localStorage.setItem(playedURLsKey, JSON.stringify(urls));
 
     const createStatsButton = () => {
         const lang = getLang();
@@ -365,16 +370,24 @@
         const url = window.location.href;
 
         if (url.includes('/join/') && !currentGameURL) {
-            // Start of new game
+            const playedURLs = loadPlayedURLs();
+            if (playedURLs.includes(url)) {
+                currentGameURL = url;
+                return;
+            }
+
             currentGameURL = url;
+            playedURLs.push(url);
+            savePlayedURLs(playedURLs);
+
             const stats = loadStats();
             stats.gamesPlayed++;
             saveStats(stats);
+
             detectWinOrLoss();
         }
 
         if (!url.includes('/join/') && currentGameURL) {
-            // Game ended, return to lobby
             currentGameURL = null;
         }
     };

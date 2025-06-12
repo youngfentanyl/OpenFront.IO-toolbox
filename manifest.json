@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "OpenFront.io Enhancer",
-  "version": "1.0",
+  "version": "1.2",
   "description": "Ajoute des fonctionnalites d’auto-join, tag, stats et demarrage auto pour OpenFront.io",
   "permissions": [
     "storage"
