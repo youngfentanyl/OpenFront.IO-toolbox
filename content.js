@@ -276,3 +276,117 @@
         }, 500);
     })();
 })();
+(function () {
+    const statsKey = 'openfrontStats';
+    const getLang = () => {
+        const langText = document.getElementById('lang-name')?.textContent?.toLowerCase();
+        return langText?.includes('fr') ? 'fr' : 'en';
+    };
+
+    const translations = {
+        fr: {
+            stats: 'Statistiques',
+            noData: "Veuillez lancer une partie pour commencer l'expérience des statistiques",
+            gamesPlayed: 'Parties jouées',
+            wins: 'Victoires',
+            winRate: 'Pourcentage de victoires'
+        },
+        en: {
+            stats: 'Stats',
+            noData: 'Please play a game to begin tracking statistics',
+            gamesPlayed: 'Games Played',
+            wins: 'Wins',
+            winRate: 'Win Rate'
+        }
+    };
+
+    let currentGameURL = null;
+    let observer = null;
+
+    const loadStats = () => JSON.parse(localStorage.getItem(statsKey)) || {
+        gamesPlayed: 0,
+        wins: 0
+    };
+
+    const saveStats = (stats) => localStorage.setItem(statsKey, JSON.stringify(stats));
+
+    const createStatsButton = () => {
+        const lang = getLang();
+        const t = translations[lang];
+
+        const logoutButton = document.querySelector('o-button#logout-discord button');
+        if (!logoutButton || document.getElementById('stats-button')) return;
+
+        const statsBtn = document.createElement('button');
+        statsBtn.id = 'stats-button';
+        statsBtn.className = 'c-button c-button--block';
+        statsBtn.style.marginTop = '8px';
+        statsBtn.textContent = t.stats;
+        statsBtn.onclick = () => showStats();
+
+        logoutButton.parentElement.insertAdjacentElement('afterend', statsBtn);
+    };
+
+    const showStats = () => {
+        const lang = getLang();
+        const t = translations[lang];
+        const stats = loadStats();
+        const winRate = stats.gamesPlayed > 0 ? Math.round((stats.wins / stats.gamesPlayed) * 100) : 0;
+
+        alert(
+            stats.gamesPlayed === 0
+                ? t.noData
+                : `${t.gamesPlayed}: ${stats.gamesPlayed}\n${t.wins}: ${stats.wins}\n${t.winRate}: ${winRate}%`
+        );
+    };
+
+    const detectWinOrLoss = () => {
+        if (observer) observer.disconnect();
+
+        observer = new MutationObserver(() => {
+            const winModal = document.querySelector('.win-modal.visible');
+            if (winModal) {
+                const title = winModal.querySelector('h2')?.textContent;
+                if (!title) return;
+
+                const isWin = title.includes('You Won!') || title.includes('Victoire') || title.includes('Gagné');
+
+                const stats = loadStats();
+                if (isWin) stats.wins++;
+                saveStats(stats);
+                observer.disconnect();
+            }
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+    };
+
+    const checkGameState = () => {
+        const url = window.location.href;
+
+        if (url.includes('/join/') && !currentGameURL) {
+            // Start of new game
+            currentGameURL = url;
+            const stats = loadStats();
+            stats.gamesPlayed++;
+            saveStats(stats);
+            detectWinOrLoss();
+        }
+
+        if (!url.includes('/join/') && currentGameURL) {
+            // Game ended, return to lobby
+            currentGameURL = null;
+        }
+    };
+
+    const mainLoop = () => {
+        createStatsButton();
+        checkGameState();
+    };
+
+    const init = () => {
+        setInterval(mainLoop, 1000);
+    };
+
+    window.addEventListener('load', init);
+})();

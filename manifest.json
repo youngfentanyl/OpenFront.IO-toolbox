@@ -1,23 +1,19 @@
 {
   "manifest_version": 3,
-  "name": "OpenFront Extension",
+  "name": "OpenFront.io Enhancer",
   "version": "1.0",
-  "description": "Extension Chrome pour améliorer l'expérience OpenFront.io",
-  "permissions": [],
-  "icons": {
-    "192": "icon-192.png"
-  },
+  "description": "Ajoute des fonctionnalites d’auto-join, tag, stats et demarrage auto pour OpenFront.io",
+  "permissions": [
+    "storage"
+  ],
   "content_scripts": [
     {
-      "matches": [ "https://openfront.io/*" ],
+      "matches": [ "*://openfront.io/*" ],
       "js": [ "content.js" ],
       "run_at": "document_idle"
     }
   ],
-  "web_accessible_resources": [
-    {
-      "resources": [ "custom-sam.png" ],
-      "matches": [ "https://openfront.io/*" ]
-    }
-  ]
+  "icons": {
+    "192": "icon-192.png"
+  }
 }
