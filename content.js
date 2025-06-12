@@ -1,5 +1,4 @@
 ﻿(() => {
-    // Détection de la langue
     const langButton = document.getElementById("lang-selector");
     const langText = langButton?.querySelector("#lang-name")?.textContent || "";
     const isFrench = langText.toLowerCase().includes("français");
@@ -23,7 +22,6 @@
         ],
     };
 
-    // TAG AUTO-INJECT
     const container = document.querySelector('.container__row');
     const flagInput = container?.querySelector('flag-input');
     const usernameInput = container?.querySelector('username-input input[type="text"]');
@@ -125,103 +123,6 @@
             tagInput.value = match ? match[1] : '';
         });
     }
-
-    // AUTOJOIN MODULE
-    (function () {
-        const AUTO_JOIN_STORAGE_KEY = 'openfront_auto_join_modes';
-
-        function createAutoJoinButtons() {
-            const langSelector = document.querySelector('lang-selector');
-            if (!langSelector) return;
-
-            const container = document.createElement('div');
-            container.style.cssText = `
-                margin-top: 12px; display: flex; flex-wrap: wrap;
-                justify-content: center; gap: 8px;
-            `;
-
-            const savedModes = JSON.parse(localStorage.getItem(AUTO_JOIN_STORAGE_KEY) || '[]');
-
-            function saveModes() {
-                localStorage.setItem(AUTO_JOIN_STORAGE_KEY, JSON.stringify(savedModes));
-            }
-
-            function updateStyles() {
-                buttons.forEach(btn => {
-                    if (savedModes.includes(btn.dataset.value)) {
-                        btn.style.backgroundColor = '#3b82f6';
-                        btn.style.color = 'white';
-                        btn.style.borderColor = '#2563eb';
-                    } else {
-                        btn.style.backgroundColor = 'white';
-                        btn.style.color = '#000';
-                        btn.style.borderColor = '#ccc';
-                    }
-                });
-            }
-
-            const buttons = t.autoJoinModes.map(mode => {
-                const btn = document.createElement('button');
-                btn.textContent = mode.text;
-                btn.dataset.value = mode.value;
-                btn.style.cssText = `
-                    padding: 8px 16px; border-radius: 8px;
-                    border: 1px solid #ccc; cursor: pointer;
-                    font-size: 1rem;
-                `;
-                btn.addEventListener('click', () => {
-                    const idx = savedModes.indexOf(mode.value);
-                    if (idx === -1) savedModes.push(mode.value);
-                    else savedModes.splice(idx, 1);
-                    saveModes();
-                    updateStyles();
-                    scanAndJoin();
-                });
-                container.appendChild(btn);
-                return btn;
-            });
-
-            updateStyles();
-            langSelector.parentElement.insertBefore(container, langSelector.nextSibling);
-        }
-
-        function clickLobbyDiv(lobbyElement) {
-            const clickableDiv = lobbyElement.querySelector('div.flex.flex-col.justify-between.h-full.col-span-full.row-span-full.p-4.md\\:p-6.text-right.z-0');
-            if (clickableDiv) clickableDiv.click();
-        }
-
-        function scanAndJoin() {
-            const savedModes = JSON.parse(localStorage.getItem(AUTO_JOIN_STORAGE_KEY) || '[]');
-            if (savedModes.length === 0) return;
-
-            const lobbies = document.querySelectorAll('public-lobby');
-            for (const mode of savedModes) {
-                for (const lobby of lobbies) {
-                    const modeSpan = lobby.querySelector('div.text-md.font-medium.text-blue-100 > span.text-sm');
-                    if (!modeSpan) continue;
-                    const text = modeSpan.textContent.trim().toLowerCase();
-                    if (
-                        (mode === 'FFA' && text.includes('free for all')) ||
-                        (mode === 'Teams' && text.includes('team')) ||
-                        (mode !== 'FFA' && mode !== 'Teams' && text === mode.toLowerCase())
-                    ) {
-                        clickLobbyDiv(lobby);
-                        return;
-                    }
-                }
-            }
-        }
-
-        function startAutoJoinLoop() {
-            setInterval(scanAndJoin, 2000);
-        }
-
-        createAutoJoinButtons();
-        scanAndJoin();
-        startAutoJoinLoop();
-    })();
-
-    // AUTO START GAME
     (function autoStartGameWhenFull() {
         const CHECK_INTERVAL_MS = 1000;
 
